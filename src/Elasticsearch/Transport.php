@@ -48,11 +48,11 @@ class Transport
      * @param ConnectionPool\AbstractConnectionPool $connectionPool
      * @param \Psr\Log\LoggerInterface $log    Monolog logger object
      */
-	// @codingStandardsIgnoreStart
-	// "Arguments with default values must be at the end of the argument list" - cannot change the interface
+    // @codingStandardsIgnoreStart
+    // "Arguments with default values must be at the end of the argument list" - cannot change the interface
     public function __construct($retries, $sniffOnStart = false, AbstractConnectionPool $connectionPool, LoggerInterface $log)
     {
-	    // @codingStandardsIgnoreEnd
+        // @codingStandardsIgnoreEnd
 
         $this->log            = $log;
         $this->connectionPool = $connectionPool;
@@ -118,6 +118,11 @@ class Transport
             },
             //onFailure
             function ($response) {
+                // This is a weird way to make this client library work for both 6.x and
+                // 2.x versions of elasticsearch. Not a super great thing.
+                if (is_object($response)) {
+                    $response = (array) $response;
+                }
                 // Ignore 400 level errors, as that means the server responded just fine
                 if (!(isset($response['code']) && $response['code'] >=400 && $response['code'] < 500)) {
                     // Otherwise schedule a check
