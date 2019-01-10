@@ -2,26 +2,28 @@
 
 declare(strict_types = 1);
 
-namespace Elasticsearch\Endpoints\Ingest\Pipeline;
+namespace Elasticsearch\Endpoints\Indices;
 
-use Elasticsearch\Common\Exceptions;
 use Elasticsearch\Endpoints\AbstractEndpoint;
+use Elasticsearch\Common\Exceptions;
 
 /**
- * Class Put
+ * Class Split
  *
  * @category Elasticsearch
- * @package  Elasticsearch\Endpoints\Ingest
+ * @package  Elasticsearch\Endpoints\Indices
  * @author   Zachary Tong <zach@elastic.co>
  * @license  http://www.apache.org/licenses/LICENSE-2.0 Apache2
  * @link     http://elastic.co
  */
-class Put extends AbstractEndpoint
+class Split extends AbstractEndpoint
 {
+
+    private $target;
+
     /**
-     * @param array $body
+     * @param array|object $body
      *
-     * @throws \Elasticsearch\Common\Exceptions\InvalidArgumentException
      * @return $this
      */
     public function setBody($body)
@@ -36,18 +38,39 @@ class Put extends AbstractEndpoint
     }
 
     /**
+     * @param string $target
+     *
+     * @return $this
+     */
+    public function setTarget($target)
+    {
+        if ($target === null) {
+            return $this;
+        }
+        $this->target = $target;
+
+        return $this;
+    }
+
+    /**
      * @throws \Elasticsearch\Common\Exceptions\RuntimeException
      * @return string
      */
     public function getURI()
     {
-        if (isset($this->id) !== true) {
+        if (isset($this->index) !== true) {
             throw new Exceptions\RuntimeException(
-                'id is required for PutPipeline'
+                'index is required for Split'
             );
         }
-        $id = $this->id;
-        $uri = "/_ingest/pipeline/$id";
+
+        if (isset($this->target) !== true) {
+            throw new Exceptions\RuntimeException(
+                'target is required for Split'
+            );
+        }
+
+        $uri   = "/{$this->index}/_split/{$this->target}";
 
         return $uri;
     }
@@ -58,8 +81,10 @@ class Put extends AbstractEndpoint
     public function getParamWhitelist()
     {
         return array(
+            'copy_settings',
+            'timeout',
             'master_timeout',
-            'timeout'
+            'wait_for_active_shards'
         );
     }
 
